@@ -23,13 +23,7 @@ const GameState = struct {
 
         const screenCenter = rl.Vector2.init(globals.halfScreenWidth, globals.halfScreenHeight);
 
-        var prng = std.rand.DefaultPrng.init(blk: {
-            var seed: u64 = undefined;
-            try std.posix.getrandom(std.mem.asBytes(&seed));
-            break :blk seed;
-        });
-        const rand = prng.random();
-
+        const rand = std.crypto.random;
         const initialVelocity = rl.Vector2.init(if (rand.boolean()) 5 else -5, if (rand.boolean()) 5 else -5);
 
         self.ball = Ball.init(screenCenter, initialVelocity);
