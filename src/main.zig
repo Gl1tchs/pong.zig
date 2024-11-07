@@ -14,7 +14,7 @@ const GameState = struct {
     score: i32 = 0,
     ballState: BallState = .None,
 
-    fn init(self: *GameState) void {
+    fn init(self: *GameState) anyerror!void {
         self.score = 0;
         self.ballState = .None;
 
@@ -22,7 +22,15 @@ const GameState = struct {
         self.paddleR = Paddle.init(globals.screenWidth - 2 * Paddle.xPadding, globals.halfScreenHeight);
 
         const screenCenter = rl.Vector2.init(globals.halfScreenWidth, globals.halfScreenHeight);
-        const initialVelocity = rl.Vector2.init(-5, 5);
+
+        var prng = std.rand.DefaultPrng.init(blk: {
+            var seed: u64 = undefined;
+            try std.posix.getrandom(std.mem.asBytes(&seed));
+            break :blk seed;
+        });
+        const rand = prng.random();
+
+        const initialVelocity = rl.Vector2.init(if (rand.boolean()) 5 else -5, if (rand.boolean()) 5 else -5);
 
         self.ball = Ball.init(screenCenter, initialVelocity);
     }
@@ -35,7 +43,7 @@ pub fn main() anyerror!void {
     rl.setTargetFPS(60);
 
     var state = GameState{};
-    state.init();
+    try state.init();
 
     while (!rl.windowShouldClose()) {
         // paddle_l movement
@@ -97,7 +105,7 @@ pub fn main() anyerror!void {
 
             // restart the game
             if (rl.isKeyDown(rl.KeyboardKey.key_space)) {
-                state.init();
+                try state.init();
             }
         }
     }
